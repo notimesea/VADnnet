@@ -53,19 +53,30 @@ for type in ["TEST", "TRAIN"]:
             if f.endswith(".WRD"):
                 id = f[:-4]
                 rate, sig = getAudio(root + "/" + id + ".WAV")
+                fbanks = extractLogFBank(rate, sig)
+                segments = []
                 file = open(root + "/" + f)
                 for line in file:
                     [start, end, word] = line.split()
                     start = int(start)
                     end = int(end) + 1
-                    sig_seg = sig[start:end]
-                    #print root, id, start, end
-                    fbanks = extractLogFBank(rate, sig_seg)
-                    class_id = keywords.index(word) if word in keywords else len(keywords)
-                    wordCount[class_id] += 1
-                    np.save(dst + "/" + type + "/" + str(item_id), [fbanks, class_id])
-                    item_id += 1
 
+                    firstFrame = int(1.0 * start / rate / step)
+                    lastFrame = int(1.0 * end / rate / step)
+
+                    class_id = keywords.index(word) if word in keywords else len(keywords)
+
+                    segments.append([firstFrame, lastFrame, class_id])
+
+                    #sig_seg = sig[start:end]
+                    #print root, id, start, end
+                    #fbanks = extractLogFBank(rate, sig_seg)
+                    #class_id = keywords.index(word) if word in keywords else len(keywords)
+                    wordCount[class_id] += 1
+                    #item_id += 1
+
+                np.save(dst + "/" + type + "/" + str(item_id), [fbanks, segments])
+                item_id += 1
                 file.close()
 
     print item_id
